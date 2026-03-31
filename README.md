@@ -1,4 +1,4 @@
-# í´¥ RoastURL.xyz
+# ğŸ”¥ğŸ”¥ğŸ”¥RoastURL.xyz
 
 > Drop your startup URL. Get a brutal AI audit in seconds.
 
@@ -10,37 +10,10 @@ Built by [@mojeebeth](https://x.com/mojeebeth) Â· [BlindspotLab](https://blindsp
 - **DB**: Supabase (PostgreSQL)
 - **Hosting**: Vercel (Serverless)
 
-## Setup
 
-1. Clone and install:
-```bash
-npm install
-```
 
-2. Configure `.env.local`:
-```env
-GEMINI_API_KEY=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_APP_URL=https://roasturl.xyz
-```
-
-3. Run Supabase migration (`supabase/migrations/001_create_roasts.sql`)
-
-4. Dev:
-```bash
-npm run dev
-```
-
-5. Deploy:
-```bash
-vercel --prod
-```
-
-## Features
-- í´¥ Brutal AI startup roast via Gemini 2.5
-- í³Š Roast Score (0â€“100) with visual meter
-- í²¾ Shareable + downloadable card
+- ğŸ”¥  Brutal AI startup roast via Gemini 2.5
+- ğŸ”¥  Roast Score (0â€“100) with visual meter
+- ğŸ”¥  Shareable + downloadable card
 - âš¡ 1hr result caching via Supabase
-- í»¡ï¸ Edge case handling (unreachable, empty pages)
+- ğŸ”¥ Edge case handling (unreachable, empty pages)
