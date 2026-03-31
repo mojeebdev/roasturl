@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isValidUrl, normalizeUrl, generateSlug } from '@/lib/utils'
+import { isValidUrl, normalizeUrl } from '@/lib/utils'
 import { supabaseAdmin } from '@/lib/supabase'
 import { RoastReport } from '@/types'
 
@@ -23,6 +23,7 @@ async function fetchPageContent(url: string): Promise<string> {
 
     const html = await res.text()
 
+    // Strip scripts, styles, tags — get clean readable text
     const text = html
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -62,7 +63,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
   "status": "unreachable"
 }`
   } else if (isEmpty) {
-    userPrompt = `The startup at "${url}" has almost NO CONTENT — likely a placeholder or coming soon page. Here is what little we found: "${pageContent.slice(0, 300)}"
+    userPrompt = `The startup at "${url}" has almost NO CONTENT — likely a placeholder or coming soon page. Here is the little we found: "${pageContent.slice(0, 300)}"
 
 Roast them for the lack of effort. Make it sting.
 
@@ -74,7 +75,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
   "status": "empty"
 }`
   } else {
-    userPrompt = `Audit the startup at "${url}". Here is the extracted page content:
+    userPrompt = `Roast the startup at "${url}". Here is the extracted page content:
 
 ---
 ${pageContent}
@@ -87,7 +88,7 @@ Analyze across these dimensions:
 4. Market positioning — differentiated or generic?
 5. Founder energy — does this feel like a serious product or a side project?
 
-Be surgical. Be honest. Be memorable. Give specific feedback tied to actual content you read.
+Be surgical. Be honest. Be memorable. Do NOT be generic. Give specific, crisp feedback tied to actual content you read.
 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {
@@ -104,7 +105,11 @@ Respond ONLY with valid JSON, no markdown, no backticks:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: systemContext + '\n\n' + userPrompt }] }],
+        contents: [
+          {
+            parts: [{ text: systemContext + '\n\n' + userPrompt }],
+          },
+        ],
         generationConfig: {
           temperature: 0.9,
           maxOutputTokens: 700,
@@ -116,7 +121,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
 
   if (!response.ok) {
     const errText = await response.text()
-    throw new Error(`Gemini API error ${response.status}: ${errText}`)
+    throw new Error(`RoastURL API error ${response.status}: ${errText}`)
   }
 
   const data = await response.json()
@@ -127,7 +132,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
     const clean = raw.replace(/```json|```/g, '').trim()
     parsed = JSON.parse(clean)
   } catch {
-    throw new Error('Failed to parse Gemini JSON response')
+    throw new Error('Failed to parse RoastURL JSON response')
   }
 
   return {
@@ -147,14 +152,17 @@ export async function POST(req: NextRequest) {
     const rawUrl: string = (body?.url || '').trim()
 
     if (!rawUrl) {
-      return NextResponse.json({ success: false, error: 'URL is required.' }, { status: 400 })
+      return NextResponse.json(
+        { success: false, error: 'URL is required.' },
+        { status: 400 }
+      )
     }
 
     const url = normalizeUrl(rawUrl)
 
     if (!isValidUrl(url)) {
       return NextResponse.json(
-        { success: false, error: "That doesn't look like a valid URL." },
+        { success: false, error: 'That doesn\'t look like a valid URL.' },
         { status: 400 }
       )
     }
@@ -173,23 +181,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         data: cached,
-        shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report/${cached.slug}`,
+        shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report/${cached.id}`,
         cached: true,
       })
     }
 
-    // Fetch page + roast
+    // Fetch + roast
     const pageContent = await fetchPageContent(url)
     const report = await callGemini(url, pageContent)
-
-    // Generate slug from URL + timestamp
-    const slug = generateSlug(url)
 
     // Persist to Supabase
     const { data: saved, error: dbError } = await supabaseAdmin
       .from('roasts')
       .insert({
-        slug,
         url: report.url,
         score: report.score,
         summary: report.summary,
@@ -203,17 +207,22 @@ export async function POST(req: NextRequest) {
       console.error('Supabase insert error:', dbError)
     }
 
-    const finalReport = saved || { ...report, slug }
+    const finalReport = saved || report
 
     return NextResponse.json({
       success: true,
       data: finalReport,
-      shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report/${slug}`,
+      shareUrl: saved?.id
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/report/${saved.id}`
+        : null,
       cached: false,
     })
   } catch (err: unknown) {
     console.error('Roast API error:', err)
     const message = err instanceof Error ? err.message : 'Something went wrong.'
-    return NextResponse.json({ success: false, error: message }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: message },
+      { status: 500 }
+    )
   }
 }
