@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   title: 'RoastURL — Precision AI Startup Audit',
   description: 'Drop your startup URL. Receive a surgical, no-mercy AI audit in seconds. No sugarcoating. No platitudes.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://roasturl.xyz'),
-  
-  // ADD THIS ICONS OBJECT
   icons: {
     icon:[ { url: '/favicon.ico' } ],
     apple:[
@@ -45,14 +43,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap"
           rel="stylesheet"
         />
-      </head>
-      <body style={{ margin: 0, padding: 0 }}>
-        {children}
         <Script 
           src="https://umami.is" 
           data-website-id="56ecc3b1-4abd-4eff-830d-4ea77eee7448"
           strategy="afterInteractive"
         />
+      </head>
+      <body style={{ margin: 0, padding: 0 }}>
+        {children} 
       </body>
     </html>
   )
