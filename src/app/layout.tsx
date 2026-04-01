@@ -43,11 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap"
           rel="stylesheet"
         />
-        <Script 
-          src="https://umami.is" 
-          data-website-id="15f1ddc8-1e57-4163-ba49-88b1766aadea"
-          strategy="afterInteractive"
-        />
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="15f1ddc8-1e57-4163-ba49-88b1766aadea"></script>
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         {children} 
