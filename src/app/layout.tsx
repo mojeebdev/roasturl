@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <Script 
           src="https://umami.is" 
-          data-website-id="56ecc3b1-4abd-4eff-830d-4ea77eee7448"
+          data-website-id="15f1ddc8-1e57-4163-ba49-88b1766aadea"
           strategy="afterInteractive"
         />
       </head>
