@@ -11,12 +11,12 @@ export async function generateMetadata({ params }: ReportPageProps): Promise<Met
   const { data: report } = await supabaseAdmin
     .from('roasts')
     .select('*')
-    .eq('slug', params.slug)
-    .single()
+    .or(`slug.eq.${params.slug},id.eq.${params.slug}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (!report) {
-    return { title: 'Report Not Found — RoastURL' }
-  }
+  if (!report) return { title: 'Report Not Found — RoastURL' }
 
   const title = `${report.url} got roasted — Score: ${report.score}/100`
   const description = `"${report.verdict}" | RoastURL Brutal AI Startup Audit`
@@ -44,14 +44,14 @@ export default async function ReportPage({ params }: ReportPageProps) {
   const { data: report, error } = await supabaseAdmin
     .from('roasts')
     .select('*')
-    .eq('slug', params.slug)
-    .single()
+    .or(`slug.eq.${params.slug},id.eq.${params.slug}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (!report || error) {
-    notFound()
-  }
+  if (!report || error) notFound()
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/report/${params.slug}`
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/report/${report.slug || params.slug}`
 
   return <ReportClient report={report} shareUrl={shareUrl} />
 }

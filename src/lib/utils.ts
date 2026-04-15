@@ -24,14 +24,13 @@ export function normalizeUrl(url: string): string {
 export function generateSlug(url: string): string {
   try {
     const { hostname } = new URL(url)
-    const base = hostname
+    return hostname
       .replace(/^www\./, '')
       .replace(/[^a-z0-9]+/gi, '-')
       .toLowerCase()
       .replace(/^-|-$/g, '')
-    return `${base}-${Date.now()}`
   } catch {
-    return `roast-${Date.now()}`
+    return 'roast'
   }
 }
 
@@ -44,11 +43,11 @@ export function getScoreLabel(score: number): string {
 }
 
 export function getScoreColor(score: number): string {
-  if (score >= 80) return '#F0C96A'   // gold — top tier roast
-  if (score >= 60) return '#C8A84B'   // warm gold
-  if (score >= 40) return '#9B6BFF'   // purple bright
-  if (score >= 20) return '#7B3FF2'   // purple mid
-  return '#3D1F8C'                    // deep purple
+  if (score >= 80) return '#F0C96A'
+  if (score >= 60) return '#C8A84B'
+  if (score >= 40) return '#9B6BFF'
+  if (score >= 20) return '#7B3FF2'
+  return '#3D1F8C'
 }
 
 export function getScoreGlow(score: number): string {

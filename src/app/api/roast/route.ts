@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isValidUrl, normalizeUrl } from '@/lib/utils'
+import { isValidUrl, normalizeUrl, generateSlug } from '@/lib/utils'
 import { supabaseAdmin } from '@/lib/supabase'
 import { RoastReport } from '@/types'
 
@@ -158,19 +158,13 @@ export async function POST(req: NextRequest) {
     const rawUrl: string = (body?.url || '').trim()
 
     if (!rawUrl) {
-      return NextResponse.json(
-        { success: false, error: 'URL is required.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'URL is required.' }, { status: 400 })
     }
 
     const url = normalizeUrl(rawUrl)
 
     if (!isValidUrl(url)) {
-      return NextResponse.json(
-        { success: false, error: "That doesn't look like a valid URL." },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "That doesn't look like a valid URL." }, { status: 400 })
     }
 
     const { data: cached } = await supabaseAdmin
@@ -186,13 +180,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         data: cached,
-        shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report/${cached.id}`,
+        shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report/${cached.slug || cached.id}`,
         cached: true,
       })
     }
 
     const pageContent = await fetchPageContent(url)
     const report = await callGemini(url, pageContent)
+    const slug = generateSlug(url)
 
     const { data: saved, error: dbError } = await supabaseAdmin
       .from('roasts')
@@ -204,6 +199,7 @@ export async function POST(req: NextRequest) {
         broken: report.broken,
         verdict: report.verdict,
         status: report.status,
+        slug,
       })
       .select()
       .single()
@@ -212,22 +208,17 @@ export async function POST(req: NextRequest) {
       console.error('Supabase insert error:', dbError)
     }
 
-    const finalReport = saved || report
+    const finalReport = saved || { ...report, slug }
 
     return NextResponse.json({
       success: true,
       data: finalReport,
-      shareUrl: saved?.id
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/report/${saved.id}`
-        : null,
+      shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report/${saved?.slug || saved?.id || slug}`,
       cached: false,
     })
   } catch (err: unknown) {
     console.error('Roast API error:', err)
     const message = err instanceof Error ? err.message : 'Something went wrong.'
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }
